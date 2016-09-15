@@ -21,10 +21,43 @@ function readTextFile(file) {
 
 function diff(initial, modified) {
     var matchModified = findLongestSubsequence(initial, modified);
-    var matchInitial = checkSequence(seqMatchInfo.sequense, initial);
+    var matchInitial = checkSequence(matchModified.sequence, initial);
 
-    console.log(matchModified, matchInitial);
+    var initialBefore = initial.slice(0, matchInitial.start);
+    var initialAfter = initial.slice(matchInitial.end + 1, initial.length);
 
+    var modifiedBefore = modified.slice(0, matchModified.start);
+    var modifiedAfter = modified.slice(matchModified.end + 1, modified.length);
+
+    //console.log(initialBefore, initialAfter, modifiedBefore, modifiedAfter);
+    //runDiff(initialBefore, modifiedBefore);
+    runDiff(initialAfter, modifiedAfter);
+}
+
+function runDiff(initial, modified) {
+    var maxLength = Math.max(initial.length, modified.length);
+    var initialLength = initial.length;
+    var modifiedLength = modified.length;
+    var i;
+
+    console.log(initial, modified);
+
+    for (i = 0; i < maxLength + 1; i++) {
+        if (i < initialLength && i < modifiedLength) {
+            if (initial[i] === modified[i]) {
+                console.log("No changes");
+            } else {
+                console.log("modified");
+            }
+        }
+
+        if (i > initialLength) {
+            console.log("inserted");
+        }
+        if (i > modifiedLength) {
+            console.log("deleted");
+        }
+    }
 }
 
 function findLongestSubsequence(initial, modified) {
@@ -35,35 +68,34 @@ function findLongestSubsequence(initial, modified) {
         for (j = len; j > i; j--) {
             sequence = initial.slice(i, j);
             currentMatchInfo = checkSequence(sequence, modified);
-            if (currentMatchInfo.sequense.length > matchInfoSequence.sequense.length) {
+            if (currentMatchInfo.sequence.length > matchInfoSequence.sequence.length) {
                 matchInfoSequence = currentMatchInfo;
             }
         }
     }
-    console.log("Pattern!!", checkSequence(matchInfoSequence.sequense, initial));
     return matchInfoSequence;
 }
 
-function MatchInfo(sequense, start, end) {
-    this.sequense = sequense;
+function MatchInfo(sequence, start, end) {
+    this.sequence = sequence;
     this.start = start;
     this.end = end;
 }
 
 function checkSequence(sequence, lines) {
-    var sequenseLength = sequence.length;
+    var sequenceLength = sequence.length;
     var linesLength = lines.length;
     var emptyMatch = new MatchInfo([], 0, 0);
     var i, chunk;
 
-    if (sequenseLength > linesLength) {
+    if (sequenceLength > linesLength) {
         return emptyMatch;
     }
 
-    for (i = 0; i <= linesLength - sequenseLength; i++) {
-        chunk = lines.slice(i, i + sequenseLength);
+    for (i = 0; i <= linesLength - sequenceLength; i++) {
+        chunk = lines.slice(i, i + sequenceLength);
         if (compareArrays(chunk, sequence)) {
-            return new MatchInfo(sequence, i, i + sequenseLength - 1);
+            return new MatchInfo(sequence, i, i + sequenceLength - 1);
         }
     }
 
