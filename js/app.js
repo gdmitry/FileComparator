@@ -1,21 +1,18 @@
-var initial = ["Some", "Simple", "Text", "File"];
-var modified = ["Another", "Text", "File", "With", "Additional", "Lines"];
+// Mocks
+//var initial = ["Some", "Simple", "Text", "File"];
+//var modified = ["Another", "Text", "File", "With", "Additional", "Lines"];
 
-//var matchInfo = findLongestSubsequence(initial, modified);
-diff(initial, modified);
+readFiles("C:\\Users\\Dima\\Documents\\Github\\FileComparator\\original.txt",
+    "C:\Users\\Dima\\Documents\\Github\\FileComparator\\modified.txt");
 
-function readTextFile(file) {
-    var reader = new FileReader();
-    return new Promise(function (resolve, reject) {
-        reader.onload = function (e) {
-            var lines = e.target.result.split('\n');
-            resolve(lines);
-        }
-        reader.onabort = function (e) {
-            console.error('File read cancelled');
-            reject(e);
-        };
-        reader.readAsText(file);
+function readFiles(originalUrl, modifiedUrl) {
+    Promise.all([
+        httpRequest(originalUrl, 'GET'),
+        httpRequest(modifiedUrl, 'GET')
+    ]).then(function (files) {    
+        var originalSplitted = removeEmptyStrings(files[0].replace(/ /g,'').split("\n"));
+        var modifiedSplitted = removeEmptyStrings(files[1].replace(/ /g,'').split("\n"));
+       diff(originalSplitted, modifiedSplitted);
     });
 }
 
@@ -29,35 +26,64 @@ function diff(initial, modified) {
     var modifiedBefore = modified.slice(0, matchModified.start);
     var modifiedAfter = modified.slice(matchModified.end + 1, modified.length);
 
-    //console.log(initialBefore, initialAfter, modifiedBefore, modifiedAfter);
-    //runDiff(initialBefore, modifiedBefore);
-    runDiff(initialAfter, modifiedAfter);
+    var diffBefore = runDiff(initialBefore, modifiedBefore);
+    var diffCommon = runSebsequence(matchModified.sequence);
+    var diffAfter = runDiff(initialAfter, modifiedAfter);
+
+    var diff = diffBefore.concat(diffCommon, diffAfter);
+
+    printOverallResult(diff);
+}
+
+function removeEmptyStrings(array) {
+    return array.filter(function(line) {
+        return line.length;
+    });
 }
 
 function runDiff(initial, modified) {
     var maxLength = Math.max(initial.length, modified.length);
     var initialLength = initial.length;
     var modifiedLength = modified.length;
-    var i;
+    var i, result, diffs = [];
 
-    console.log(initial, modified);
-
-    for (i = 0; i < maxLength + 1; i++) {
-        if (i < initialLength && i < modifiedLength) {
+    for (i = 0; i < maxLength; i++) {
+        if ((i < initialLength) && (i < modifiedLength)) {
             if (initial[i] === modified[i]) {
-                console.log("No changes");
+                result = " " + initial[i];
             } else {
-                console.log("modified");
+                result = " * " + initial[i] + " | " + modified[i];
             }
         }
-
-        if (i > initialLength) {
-            console.log("inserted");
+        if ((i + 1) > initialLength) {
+            result = " + " + modified[i];
         }
-        if (i > modifiedLength) {
-            console.log("deleted");
+        if ((i + 1) > modifiedLength) {
+            result = " - " + initial[i];
         }
+        diffs.push(result);
     }
+    return diffs;
+}
+
+function printOverallResult(diff) {
+    var length = diff.length;
+    var i;
+
+    for (i = 0; i < length; i++) {
+        console.log(i + 1 + diff[i]);
+    }
+}
+
+function runSebsequence(subsequence) {
+    var length = subsequence.length;
+    var i, result, diffs = [];
+
+    for (i = 0; i < length; i++) {
+        result = "  " + subsequence[i];
+        diffs.push(result);
+    }
+    return diffs;
 }
 
 function findLongestSubsequence(initial, modified) {
